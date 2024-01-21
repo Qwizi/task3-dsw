@@ -4,9 +4,13 @@ version = "0.0.1"
 description = ""
 authors = ["Adrian Ciolek <ciolek.adrian@protonmail.com>"]
 readme = "README.md"
+packages = [{ include = "task3_dsw/" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
+httpx = "^0.26.0"
+pydantic = "^2.5.3"
+pydantic-settings = "^2.1.0"
 
 
 [tool.poetry.group.dev.dependencies]
