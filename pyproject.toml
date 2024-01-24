@@ -16,6 +16,7 @@ pydantic-settings = "^2.1.0"
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.14"
 pre-commit = "^3.6.0"
+pytest = "^7.4.4"
 
 [build-system]
 requires = ["poetry-core"]
@@ -56,4 +57,6 @@ ignore = [
     "D401",
     "ISC001",
     "COM812",
+    "E501",
+    "RUF012",
 ]
