@@ -1,18 +1,19 @@
 import httpx
 import pytest
+from task3_dsw import settings
 from task3_dsw.nbp_api import ExchangeRateSchema, NBPApiClient, NBPApiError
 
+def test_invalid_exchange_rate_currency_code():
+    with pytest.raises(ValueError):
+        ExchangeRateSchema(code="xD", table="a", date="2021-01-04")
 
-def test_is_valid_currency_code_valid(settings):
-    nbp_api_client = NBPApiClient(settings)
-    assert nbp_api_client.is_valid_currency_code('USD') is True
-
-def test_is_valid_currency_code_invalid(settings):
-    nbp_api_client = NBPApiClient(settings)
-    assert nbp_api_client.is_valid_currency_code('JPY') is False
+def test_valid_exchange_rate_currency_code():
+    settings.CURRENCIES = ["CHF"]
+    assert ExchangeRateSchema(code="CHF", table="a", date="2021-01-04").code == "CHF"
 
 
 def test_get_exchange_rate_valid_code(nbp_api_client_mock):
+    settings.CURRENCIES = ["EUR", "USD", "GBP"]
     data = ExchangeRateSchema(code="EUR", table="a", date="2024-01-02")
     mock_return_data = {'table': 'A', 'currency': 'euro', 'code': 'EUR', 'rates': [{'no': '001/A/NBP/2024', 'effectiveDate': '2024-01-02', 'mid': 4.3434}]}
     nbp_api_client_mock.get_exchange_rate.return_value = mock_return_data
