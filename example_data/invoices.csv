@@ -1,0 +1,4 @@
+invoice_id,amount,currency,date
+fef4095d-006a-4f56-a2b1-1e3fc89391f0,100.0,PLN,2020-01-01
+eb6f80a1-156b-4c55-829d-ef1ee57cbbb9,100.0,EUR,2022-01-01
+bcaa7136-ac9d-48ee-8e0d-cabafc8ac217,100.0,USD,2024-01-01
