@@ -4,9 +4,11 @@ from __future__ import annotations
 import datetime  # noqa: TCH003
 
 import httpx
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
-from task3_dsw.settings import Settings  # noqa: TCH001
+from task3_dsw.settings import (
+    settings,
+)
 
 
 class NBPApiError(Exception):
@@ -19,6 +21,14 @@ class ExchangeRateSchema(BaseModel):
     table: str = "a"
     code: str
     date: datetime.date
+
+    @field_validator("code")
+    def currency_is_valid(cls, v) -> str:  # noqa: N805, ANN001
+        """Validate currency code."""
+        if v not in settings.CURRENCIES:
+            msg = f"Currency code {v} is not valid."
+            raise ValueError(msg)
+        return v
 
 
 class RateSchema(BaseModel):
@@ -45,26 +55,11 @@ class NBPApiClient:
     headers: dict
     client: httpx.Client
 
-    def __init__(self, settings: Settings) -> None:
-        """Initialize NBPApiClient with given api_url."""
+    def __init__(self) -> None:
+        """Initialize NBPApiClient."""
         self.api_url = "http://api.nbp.pl/api/"
         self.headers = {"Accept": "application/json"}
         self.client = httpx.Client(base_url=self.api_url, headers=self.headers)
-        self.settings = settings
-
-    def is_valid_currency_code(self, currency_code: str) -> bool:
-        """
-        Check if given currency code is valid.
-
-        Args:
-        ----
-            currency_code: Currency code to be checked.
-
-        Returns:
-        -------
-            True if currency code is valid, False otherwise.
-        """
-        return currency_code in self.settings.CURRENCIES
 
     def get_exchange_rate(self, data: ExchangeRateSchema) -> ExchangeRateSchemaResponse:
         """
@@ -82,9 +77,6 @@ class NBPApiClient:
         ------
             NBPApiError: If currency code is invalid or if an HTTP error occurred.
         """
-        if not self.is_valid_currency_code(data.code):
-            msg = f"This currency is not in CURRENCIES variable: {data.code}"
-            raise NBPApiError(msg)
         try:
             endpoint = f"exchangerates/rates/{data.table}/{data.code}/{data.date}/"
             response = self.client.get(endpoint)

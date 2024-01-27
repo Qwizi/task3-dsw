@@ -2,29 +2,25 @@
 from __future__ import annotations
 
 import csv
-import datetime  # noqa: TCH003
-import uuid
+import uuid  # noqa: TCH003
 from pathlib import Path
 
-from pydantic import BaseModel, Field
+from task3_dsw import settings
+from task3_dsw.invoices import Invoice
 
-payments_file_path = "./data/payments.csv"
+PAYMENTS_FILE_PATH = "./data/payments.csv"
 
 
-class Payment(BaseModel):
+class Payment(Invoice):
     """Payment model."""
 
-    id: uuid.UUID = Field(default_factory=uuid.uuid4)  # noqa: A003
     invoice_id: uuid.UUID
-    amount: float
-    currency: str
-    transaction_date: datetime.date
 
 
 def create_payments_file() -> None:
     """Create payments file."""
-    if not Path.exists(Path(payments_file_path)):
-        with Path.open(payments_file_path, "w", newline="") as payments_file:
+    if not Path.exists(Path(settings.PAYMENTS_FILE_PATH)):
+        with Path.open(settings.PAYMENTS_FILE_PATH, "w", newline="") as payments_file:
             writer = csv.writer(payments_file)
             writer.writerow(["id", "invoice_id", "amount", "currency", "date"])
 
@@ -35,13 +31,14 @@ def add_payment_to_file(data: Payment) -> Payment:
 
     Args:
     ----
+        file_path: Path to file.
         data: Payment to be added.
 
     Returns:
     -------
         Payment: Added payment.
     """
-    with Path.open(payments_file_path, "a", newline="") as payments_file:
+    with Path.open(settings.PAYMENTS_FILE_PATH, "a", newline="") as payments_file:
         writer = csv.writer(payments_file)
         writer.writerow(
             [
@@ -49,7 +46,7 @@ def add_payment_to_file(data: Payment) -> Payment:
                 data.invoice_id,
                 data.amount,
                 data.currency,
-                data.transaction_date,
+                data.date,
             ]
         )
         return data
@@ -61,13 +58,14 @@ def get_payments_from_file(invoice_id: uuid.UUID) -> list[Payment]:
 
     Args:
     ----
+        file_path: Path to file.
         invoice_id: Invoice id to be searched.
 
     Returns:
     -------
         list[Payment]: List of payments.
     """
-    with Path.open(payments_file_path, "r", newline="") as payments_file:
+    with Path.open(settings.PAYMENTS_FILE_PATH, "r", newline="") as payments_file:
         reader = csv.reader(payments_file)
         return [
             Payment(
@@ -75,7 +73,7 @@ def get_payments_from_file(invoice_id: uuid.UUID) -> list[Payment]:
                 invoice_id=row[1],
                 amount=row[2],
                 currency=row[3],
-                transaction_date=row[4],
+                date=row[4],
             )
             for row in reader
             if row[1] == invoice_id
