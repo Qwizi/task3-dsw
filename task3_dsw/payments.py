@@ -8,8 +8,6 @@ from pathlib import Path
 from task3_dsw import settings
 from task3_dsw.invoices import Invoice
 
-PAYMENTS_FILE_PATH = "./data/payments.csv"
-
 
 class Payment(Invoice):
     """Payment model."""
@@ -52,6 +50,35 @@ def add_payment_to_file(data: Payment) -> Payment:
         return data
 
 
+def get_payment_from_file(**kwargs: str) -> Payment:
+    """
+    Get payment.
+
+    Args:
+    ----
+        **kwargs: Keyword arguments.
+
+    Returns:
+    -------
+        Payment: Payment.
+    """
+    with Path.open(settings.PAYMENTS_FILE_PATH, "r", newline="") as payments_file:
+        reader = csv.reader(payments_file)
+        next(reader)
+        for row in reader:
+            if (
+                kwargs.get("payment_id") and row[0] == str(kwargs.get("payment_id"))
+            ) or (kwargs.get("invoice_id") and row[1] == str(kwargs.get("invoice_id"))):
+                return Payment(
+                    id=row[0],
+                    invoice_id=row[1],
+                    amount=row[2],
+                    currency=row[3],
+                    date=row[4],
+                )
+        return None
+
+
 def get_payments_from_file(invoice_id: uuid.UUID) -> list[Payment]:
     """
     Get payments from file.
@@ -76,5 +103,5 @@ def get_payments_from_file(invoice_id: uuid.UUID) -> list[Payment]:
                 date=row[4],
             )
             for row in reader
-            if row[1] == invoice_id
+            if row[1] == str(invoice_id)
         ]
