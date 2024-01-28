@@ -27,6 +27,19 @@ def add_payment_to_file(data: Payment) -> Payment:
     """
     Add payment to file.
 
+    Example:
+    -------
+    ```python
+    from task3_dsw.payments import add_payment_to_file, Payment
+
+    payment = add_payment_to_file(data=Payment(
+        invoice_id="123e4567-e89b-12d3-a456-426614174000",
+        amount=100,
+        currency="USD",
+        date="2021-01-01",
+    ))
+    ```
+
     Args:
     ----
         file_path: Path to file.

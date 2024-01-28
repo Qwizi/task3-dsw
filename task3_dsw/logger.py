@@ -3,6 +3,8 @@
 import logging
 import sys
 
+from task3_dsw import settings
+
 logger = logging.getLogger("Task3 DSW Logger")
 
 stdout = logging.StreamHandler(stream=sys.stdout)
@@ -14,4 +16,7 @@ fmt = logging.Formatter(
 stdout.setFormatter(fmt)
 logger.addHandler(stdout)
 
-logger.setLevel(logging.INFO)
+if settings.DEBUG:
+    logger.setLevel(logging.DEBUG)
+else:
+    logger.setLevel(logging.ERROR)
