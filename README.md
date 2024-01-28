@@ -49,6 +49,13 @@ These instructions will get you a copy of the project up and running on your loc
 
 After following the installation steps, you can start using the program to calculate exchange rate differences. (Provide instructions on how to use the program here)
 
+**Run program in interactive mode with verbose**
+```shell
+cd task3_dsw
+python main.py -i -v
+```
+
+
 
 
 
