@@ -1,13 +1,8 @@
 """Module for creating interactive menu in console."""
 import sys
 
-from task3_dsw.invoices import (
-    Invoice,
-    add_invoice_to_file,
-    get_invoice_from_file,
-)
+from task3_dsw.database import Database, Invoice, Payment
 from task3_dsw.logger import logger
-from task3_dsw.payments import Payment, add_payment_to_file
 
 
 class Action:
@@ -40,16 +35,29 @@ class ExitAction(Action):
 class AddInvoiceAction(Action):
     """AddInvoiceAction class for creating add invoice action in interactive menu."""
 
+    def __init__(
+        self, name: str, tag: str, description: str, database: Database
+    ) -> None:
+        """Initialize AddInvoiceAction class."""
+        super().__init__(name, tag, description)
+        self.database = database
+
     def execute(self) -> None:
         """Execute action for adding invoice."""
         try:
             amount = float(input("Enter amount: "))
             currency = input("Enter currency: ")
             date = input("Enter date: ")
-            invoice_schema = add_invoice_to_file(
-                data=Invoice(amount=amount, currency=currency, date=date)
+            self.database.load()
+            invoice_schema = self.database.add_invoice(
+                invoice=Invoice(
+                    amount=amount,
+                    currency=currency,
+                    date=date,
+                )
             )
             logger.debug("Added invoice: %s", invoice_schema)
+            self.database.save()
         except ValueError as e:
             logger.error("Invalid value: %s", e)
         except FileNotFoundError as e:
@@ -59,24 +67,33 @@ class AddInvoiceAction(Action):
 class AddPaymentAction(Action):
     """AddPaymentAction class for creating add payment action in interactive menu."""
 
+    def __init__(
+        self, name: str, tag: str, description: str, database: Database
+    ) -> None:
+        """Initialize AddPaymentAction class."""
+        super().__init__(name, tag, description)
+        self.database = database
+
     def execute(self) -> None:
         """Execute action for adding payment."""
         try:
-            invoice_id = input("Enter invoice id: ")
+            invoice_index = int(input("Enter invoice index: "))
             amount = float(input("Enter amount: "))
             currency = input("Enter currency: ")
             date = input("Enter date: ")
 
-            invoice_from_file = get_invoice_from_file(invoice_id=invoice_id)
-            if invoice_from_file is None:
-                logger.error(f"Invoice with id {invoice_id} not exists.")
+            self.database.load()
+            invoice = self.database.get_invoice(invoice_index=invoice_index)
+            if invoice is None:
+                logger.error(f"Invoice with id {invoice_index} not exists.")
                 return
-            payment_schema = add_payment_to_file(
-                data=Payment(
-                    amount=amount, currency=currency, date=date, invoice_id=invoice_id
+            payment_schema = self.database.add_payment(
+                payment=Payment(
+                    amount=amount, currency=currency, date=date, invoice_id=invoice.id
                 )
             )
             logger.debug("Added payment: %s", payment_schema)
+            self.database.save()
         except ValueError as e:
             logger.error("Invalid value: %s", e)
 
