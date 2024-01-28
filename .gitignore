@@ -384,5 +384,4 @@ pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode
 
-task3_dsw/data/invoices.csv
-task3_dsw/data/payments.csv
+task3_dsw/data/database.json
