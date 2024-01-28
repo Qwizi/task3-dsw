@@ -65,7 +65,7 @@ class AddInvoiceAction(Action):
 
 
 class AddPaymentAction(Action):
-    """AddPaymentAction class for creating add payment action in interactive menu."""
+    """AddPaymentAction JD  class for creating add payment action in interactive menu."""
 
     def __init__(
         self, name: str, tag: str, description: str, database: Database
