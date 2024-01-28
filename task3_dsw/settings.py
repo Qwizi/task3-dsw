@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     """
 
     DEBUG: bool = False
+    DATABASE_PATH: str = "./data/database.json"
     INVOICES_FILE_PATH: str = "./data/invoices.csv"
     PAYMENTS_FILE_PATH: str = "./data/payments.csv"
     CURRENCIES: list[str] = ["EUR", "USD", "GBP"]

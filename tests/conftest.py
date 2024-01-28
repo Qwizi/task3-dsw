@@ -1,7 +1,7 @@
 from unittest.mock import Mock
 import pytest
-from task3_dsw.invoices import Invoice
-from task3_dsw.payments import Payment
+from task3_dsw.database import Invoice
+from task3_dsw.database import Payment
 
 from task3_dsw.settings import Settings
 
