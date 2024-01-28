@@ -1,4 +1,9 @@
 # Task 3 DSW: Program for Calculating Exchange Rate Differences
+[![Tests](https://github.com/Qwizi/task3-dsw/actions/workflows/test.yml/badge.svg)](https://github.com/Qwizi/task3-dsw/actions/workflows/test.yml)
+
+[![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://python-poetry.org/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
 This program is designed to calculate differences in exchange rates.
 
