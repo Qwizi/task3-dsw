@@ -55,9 +55,26 @@ cd task3_dsw
 python main.py -i -v
 ```
 
-
-
-
+## Features check list
+- [x] Konfiguracja walut
+- [x] Wprowadzanie danych płatności
+- [x] Pobieranie kursów walut
+- [ ] Wyliczanie różnic kursowych
+- [x] Zapis danych do pliku
+- [ ] Dokumentacja
+- [x] Obsługa błędów i walidacja danych
+- [ ] Pomoc i instrukcja
+- [x] Standardy Nazewnictwa i Komentarze
+- [ ] Raport Projektowy
+- [x] Przestrzeganie Standardów PEP 8
+- [ ] Dokumentacja Kodu
+- [x] Wprowadzanie danych faktury
+- [ ] Podsumowanie płatności
+- [ ] Optymalizacja Wydajności
+- [ ] Tryb wsadowy i dokumentacja
+- [x] Tryp interaktywny
+- [x] Zarządzanie Kodem za Pomocą Git
+- [x] Testowanie Jednostkowe
 
 ## Legal info
 © Copyright by Adrian Ciołek (@Qwizi), Mateusz Cyran (@Kuis03), Kamil Duszyński (@VirdisPl).

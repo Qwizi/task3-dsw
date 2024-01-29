@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "task3-dsw"
-version = "0.0.1"
+version = "0.0.2"
 description = ""
 authors = ["Adrian Ciolek <ciolek.adrian@protonmail.com>"]
 readme = "README.md"
