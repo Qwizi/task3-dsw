@@ -9,12 +9,14 @@ from venv import logger
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from task3_dsw import settings
-from task3_dsw.settings import Settings  # noqa: TCH001
+from task3_dsw.settings import (
+    Settings,
+    settings,
+)
 
 
-class Invoice(BaseModel):
-    """Invoice model."""
+class AddInvoice(BaseModel):
+    """Add invoice model."""
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4)  # noqa: A003, RUF100
     amount: float
@@ -24,16 +26,47 @@ class Invoice(BaseModel):
     @field_validator("currency")
     def currency_is_valid(cls, v) -> str:  # noqa: N805, ANN001
         """Validate currency code."""
-        if v not in settings.CURRENCIES:
+        if v not in settings.CURRENCIES and v != "PLN":
             msg = f"Currency code {v} is not valid."
             raise ValueError(msg)
         return v
 
 
-class Payment(Invoice):
+class Invoice(BaseModel):
+    """Invoice model."""
+
+    id: uuid.UUID
+    amount: float
+    currency: str
+    date: datetime.date
+
+
+class AddPayment(BaseModel):
+    """Add payment model."""
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4)
+    invoice_id: uuid.UUID
+    amount: float
+    currency: str
+    date: datetime.date
+
+    @field_validator("currency")
+    def currency_is_valid(cls, v) -> str:  # noqa: N805, ANN001
+        """Validate currency code."""
+        if v not in settings.CURRENCIES and v != "PLN":
+            msg = f"Currency code {v} is not valid."
+            raise ValueError(msg)
+        return v
+
+
+class Payment(BaseModel):
     """Payment model."""
 
+    id: uuid.UUID
     invoice_id: uuid.UUID
+    amount: float
+    currency: str
+    date: datetime.date
 
 
 class DataSchema(BaseModel):
@@ -67,6 +100,7 @@ class Database:
                 self.data = DataSchema(**json.load(f))
         except FileNotFoundError:
             self.data = DataSchema(invoices=[], payments=[])
+            self.save()
         except (json.decoder.JSONDecodeError, TypeError, ValidationError) as e:
             logger.error(e)
 
@@ -75,34 +109,113 @@ class Database:
         with Path.open(self.settings.DATABASE_PATH, "w") as f:
             f.write(self.data.model_dump_json())
 
-    def add_invoice(self, invoice: Invoice) -> Invoice:
-        """Add invoice to database."""
+    def add_invoice(self, invoice: AddInvoice) -> Invoice:
+        """
+        Add invoice to database.
+
+        Args:
+        ----
+            invoice: Invoice
+
+        Returns:
+        -------
+            Invoice
+        """
         self.data.invoices.append(invoice)
         return invoice
 
     def add_payment(self, payment: Payment) -> Payment:
-        """Add payment to database."""
+        """
+        Add payment to database.
+
+        Args:
+        ----
+            payment: Payment
+
+        Returns:
+        -------
+            Payment
+        """
         self.data.payments.append(payment)
         return payment
 
     def get_invoice(self, invoice_index: int) -> Invoice:
-        """Get invoice from database."""
+        """
+        Get invoice from database.
+
+        Args:
+        ----
+            invoice_index: int
+
+        Returns:
+        -------
+            Invoice
+        """
         try:
             return self.data.invoices[invoice_index]
         except IndexError:
             return None
 
     def get_invoices(self) -> list[Invoice]:
-        """Get invoices from database."""
+        """
+        Get invoices from database.
+
+        Returns
+        -------
+            list[Invoice]
+        """
         return self.data.invoices
 
     def get_payment(self, payment_id: str) -> Payment:
-        """Get payment from database."""
+        """
+        Get payment from database.
+
+        Args:
+        ----
+            payment_id: str
+
+        Returns:
+        -------
+            Payment
+        """
         for payment in self.data.payments:
             if payment.id == payment_id:
                 return payment
         return None
 
-    def get_payments(self) -> list[Payment]:
-        """Get payments from database."""
+    def get_payment_by_index(self, payment_index: int) -> Payment:
+        """
+        Get payment from database.
+
+        Args:
+        ----
+            payment_index: int
+
+        Returns:
+        -------
+            Payment
+        """
+        try:
+            return self.data.payments[payment_index]
+        except IndexError:
+            return None
+
+    def get_payments(self, invoice_id: str | None = None) -> list[Payment]:
+        """
+        Get payments from database.
+
+        Args:
+        ----
+            invoice_id: str
+
+        Returns:
+        -------
+            list[Payment]
+        """
+        if invoice_id:
+            return [
+                payment
+                for payment in self.data.payments
+                if payment.invoice_id == invoice_id
+            ]
         return self.data.payments

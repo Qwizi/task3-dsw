@@ -1,7 +1,10 @@
+from pathlib import Path
+import tempfile
 from unittest.mock import Mock
 import pytest
-from task3_dsw.database import Invoice
+from task3_dsw.database import Database, Invoice
 from task3_dsw.database import Payment
+from task3_dsw.nbp_api import NBPApiClient
 
 from task3_dsw.settings import Settings
 
@@ -14,6 +17,11 @@ def settings():
 def nbp_api_client_mock():
     """Mock for NBPApiClient."""
     return Mock()
+
+@pytest.fixture
+def nbp_api_client():
+    """Mock for NBPApiClient."""
+    return NBPApiClient()
 
 @pytest.fixture
 def test_invoice_schema():
@@ -35,3 +43,13 @@ def test_payment_schema(test_invoice_schema: Invoice):
         currency="USD",
         date="2021-01-01",
     )
+
+@pytest.fixture
+def test_database(settings):
+    """Create temporary database.json file."""
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        database_path = tmpdirname + "/database.json"
+        settings.DATABASE_PATH = database_path
+        database = Database(settings=settings)
+        database.load()
+        yield database

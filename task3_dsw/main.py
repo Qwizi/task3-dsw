@@ -9,9 +9,11 @@ from task3_dsw.logger import logger
 from task3_dsw.menu import (
     AddInvoiceAction,
     AddPaymentAction,
+    CalculateExchangeRateDifferenceAction,
     ExitAction,
     InteractiveMenu,
 )
+from task3_dsw.nbp_api import NBPApiClient
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -62,26 +64,35 @@ def main() -> None:
 
     if args.interactive:
         logger.debug("We are in interactive mode.")
-        # initialize InteractiveMenu with nbp_api_client
+        # initialize InteractiveMenu
         interactive_menu = InteractiveMenu()
         interactive_menu.add_action(
             AddInvoiceAction(
-                name="Add invoice",
+                name="Dodaj fakture",
                 tag="add_invoice",
-                description="Add invoice",
+                description="Dodaj fakture",
                 database=database,
             )
         )
         interactive_menu.add_action(
             AddPaymentAction(
-                name="Add payment",
+                name="Dodaj płatność",
                 tag="add_payment",
-                description="Add payment",
+                description="Dodaj płatność",
                 database=database,
             )
         )
         interactive_menu.add_action(
-            ExitAction(name="Exit", tag="exit", description="Exit")
+            CalculateExchangeRateDifferenceAction(
+                name="Oblicz różnice kursów",
+                tag="calculate_exchange_rate_difference",
+                description="Oblicz różnice kursów",
+                database=database,
+                nbp_api_client=NBPApiClient(),
+            )
+        )
+        interactive_menu.add_action(
+            ExitAction(name="Wyjdź", tag="exit", description="Wyjdź")
         )
         interactive_menu.run()
     else:
