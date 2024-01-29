@@ -6,6 +6,7 @@ import datetime  # noqa: TCH003
 import httpx
 from pydantic import BaseModel, field_validator
 
+from task3_dsw.database import Invoice, Payment
 from task3_dsw.settings import (
     settings,
 )
@@ -94,3 +95,39 @@ class NBPApiClient:
             raise NBPApiError(msg) from e
         else:
             return ExchangeRateSchemaResponse(**response.json())
+
+    def calculate_difference(
+        self, invoice: Invoice, payment: Payment
+    ) -> tuple[ExchangeRateSchemaResponse, ExchangeRateSchemaResponse, float]:
+        """
+        Calculate exchange rate difference.
+
+        Args:
+        ----
+            invoice: Invoice
+            payment: Payment
+
+        Returns:
+        -------
+            tuple[ExchangeRateSchemaResponse, ExchangeRateSchemaResponse, float]
+        """
+        # if invoice and payment have the same currency then exchange rate difference is 0
+        if invoice.currency == payment.currency:
+            return None, None, 0
+        invoice_exchange_rate = self.get_exchange_rate(
+            ExchangeRateSchema(
+                code=payment.currency,
+                date=invoice.date,
+            )
+        )
+        payment_exchange_rate = self.get_exchange_rate(
+            ExchangeRateSchema(
+                code=payment.currency,
+                date=payment.date,
+            )
+        )
+        echange_rate_difference = (
+            payment_exchange_rate.rates[0].mid - invoice_exchange_rate.rates[0].mid
+        ) * invoice.amount
+
+        return invoice_exchange_rate, payment_exchange_rate, echange_rate_difference

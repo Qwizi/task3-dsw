@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "task3-dsw"
-version = "0.0.1"
+version = "0.0.2"
 description = ""
 authors = ["Adrian Ciolek <ciolek.adrian@protonmail.com>"]
 readme = "README.md"
@@ -17,6 +17,7 @@ pydantic-settings = "^2.1.0"
 ruff = "^0.1.14"
 pre-commit = "^3.6.0"
 pytest = "^7.4.4"
+pytest-mock = "^3.12.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -59,4 +60,7 @@ ignore = [
     "COM812",
     "E501",
     "RUF012",
+    "T201",
+    "TCH001",
+    "A003",
 ]
