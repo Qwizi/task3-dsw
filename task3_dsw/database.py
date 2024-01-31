@@ -40,6 +40,10 @@ class Invoice(BaseModel):
     currency: str
     date: datetime.date
 
+    def __str__(self) -> str:
+        """Return string representation of invoice."""
+        return f"<{self.id} | {self.amount} | {self.currency} | {self.date}>"
+
 
 class AddPayment(BaseModel):
     """Add payment model."""
@@ -67,6 +71,10 @@ class Payment(BaseModel):
     amount: float
     currency: str
     date: datetime.date
+
+    def __str__(self) -> str:
+        """Return string representation of payment."""
+        return f"<{self.id} | {self.invoice_id} | {self.amount} | {self.currency} | {self.date}>"
 
 
 class DataSchema(BaseModel):
