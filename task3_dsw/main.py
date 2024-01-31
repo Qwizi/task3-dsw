@@ -10,6 +10,7 @@ from task3_dsw.menu import (
     AddInvoiceAction,
     AddPaymentAction,
     CalculateExchangeRateDifferenceAction,
+    CheckInvoiceStatusAction,
     ExitAction,
     InteractiveMenu,
 )
@@ -58,7 +59,10 @@ def main() -> None:
         settings.DEBUG = args.verbose
         logger.setLevel("DEBUG")
 
-    # initialize NBPApiClient with settings
+    # initialize NBPApiClient
+    nbp_api_client = NBPApiClient()
+
+    # initialize Database
     database = Database(settings=settings)
     database.load()
 
@@ -70,7 +74,7 @@ def main() -> None:
             AddInvoiceAction(
                 name="Dodaj fakture",
                 tag="add_invoice",
-                description="Dodaj fakture",
+                description="Akcja dodawania faktury do bazy danych",
                 database=database,
             )
         )
@@ -86,9 +90,18 @@ def main() -> None:
             CalculateExchangeRateDifferenceAction(
                 name="Oblicz różnice kursów",
                 tag="calculate_exchange_rate_difference",
-                description="Oblicz różnice kursów",
+                description="Akcja obliczania różnic kursów",
                 database=database,
-                nbp_api_client=NBPApiClient(),
+                nbp_api_client=nbp_api_client,
+            )
+        )
+        interactive_menu.add_action(
+            CheckInvoiceStatusAction(
+                name="Sprawdź status faktury",
+                tag="check_invoice_status",
+                description="Akcja sprawdzania statusu faktury.\nWymaga podania numeru faktury.\nDla uproszeczenia przekszalcamy wartosc faktury oraz płatności do PLN.",
+                database=database,
+                nbp_api_client=nbp_api_client,
             )
         )
         interactive_menu.add_action(

@@ -6,7 +6,7 @@ import sys
 
 from task3_dsw.database import AddInvoice, AddPayment, Database, Invoice, Payment
 from task3_dsw.logger import logger
-from task3_dsw.nbp_api import NBPApiClient, NBPApiError
+from task3_dsw.nbp_api import ExchangeRateSchema, NBPApiClient, NBPApiError
 
 
 class Action:
@@ -58,12 +58,11 @@ class WithDatabaseAction(Action):
         """
         # With id number to choice in menu
         available_invoice = "\n".join(
-            [
-                f"{invoices.index(invoice)} - <{invoice.id} | {invoice.amount} | {invoice.currency} | {invoice.date}>"
-                for invoice in invoices
-            ]
+            [f"{invoices.index(invoice)} - {invoice}" for invoice in invoices]
         )
-        print(f"Dostepne faktury: \n {available_invoice}")
+        print(
+            f"Dostepne faktury: \n Invoice index - <id | amount | currency | date> \n {available_invoice}"
+        )
 
     def print_available_payments(self, payments: list[Payment]) -> str:
         """
@@ -80,12 +79,62 @@ class WithDatabaseAction(Action):
         """
         # With id number to choice in menu
         available_payments = "\n".join(
-            [
-                f"{payments.index(payment)} - <{payment.id} | {payment.amount} | {payment.currency} | {payment.date}>"
-                for payment in payments
-            ]
+            [f"{payments.index(payment)} - {payment}" for payment in payments]
         )
-        print(f"Dostepne płatności dla tej faktury: \n {available_payments}")
+        print(
+            f"Dostepne płatności dla tej faktury: \n  Invoice index - <id | invoice_id | currency | date> \n {available_payments}"
+        )
+
+    def ask_for_invoice_index(self) -> Invoice | None:
+        """
+        Ask user for invoice index.
+
+        Returns
+        -------
+            int: invoice index
+        """
+        self.database.load()
+        invoices = self.database.get_invoices()
+        self.print_available_invoices(invoices)
+        invoice_index = int(input("Wprowadz index faktury: "))
+
+        # Get invoice from database
+        invoice = self.database.get_invoice(invoice_index=invoice_index)
+
+        # Check if invoice exists in database
+        if invoice is None:
+            logger.error(f"Invoice with index {invoice_index} not exists.")
+            return None
+        # Print invoice
+        print(f"Wybrałes fakture {invoice}")
+        return invoice
+
+    def ask_for_payment_index(self, invoice_id: str) -> Payment | None:
+        """
+        Ask user for payment index.
+
+        Returns
+        -------
+            int: payment index
+        """
+        payments = self.database.get_payments(invoice_id=invoice_id)
+
+        if len(payments) == 0:
+            msg = f"Brak płatnosci dla faktury {invoice_id}"
+            raise ValueError(msg)
+
+            # Print available payments
+        self.print_available_payments(payments)
+
+        payment_index = int(input("Wprowadz index płatności: "))
+        # Load data from database
+        self.database.load()
+
+        try:
+            return payments[payment_index]
+        except IndexError as e:
+            msg = f"Payment with index {payment_index} not exists."
+            raise ValueError(msg) from e
 
 
 class ExitAction(Action):
@@ -141,25 +190,15 @@ class AddPaymentAction(WithDatabaseAction):
             # Get avaiable currencies from settings and add PLN
             avaiable_currency = self.get_avaiable_currency()
 
-            # Print available invoices
-            invoices = self.database.get_invoices()
-            self.print_available_invoices(invoices)
-
             # Ask user for payment data
-            invoice_index = int(input("Wprowadz index faktury: "))
+            invoice = self.ask_for_invoice_index()
+            if invoice is None:
+                return
             amount = float(input("Wprowadź kwote: "))
             currency = input(f"Wprowadź walute [{avaiable_currency}]: ")
             date = input("Wprowadź date: [YYYY-MM-DD]: ")
             # Load data from database
             self.database.load()
-
-            # Get invoice from database
-            invoice = self.database.get_invoice(invoice_index=invoice_index)
-
-            # Check if invoice exists in database
-            if invoice is None:
-                logger.error(f"Invoice with id {invoice_index} not exists.")
-                return
 
             # Add payment to database
             payment_schema = self.database.add_payment(
@@ -196,42 +235,14 @@ class CalculateExchangeRateDifferenceAction(WithDatabaseAction):
     def execute(self) -> None:
         """Execute action for calculating exchange rate difference."""
         try:
-            invoices = self.database.get_invoices()
-            # Print available invoices
-            self.print_available_invoices(invoices)
-            # Ask user for payment data
-            invoice_index = int(input("Wprowadz index faktury: "))
-
-            invoice = self.database.get_invoice(invoice_index=invoice_index)
-
-            # Check if invoice exists in database
-            if invoice is None:
-                logger.error(f"Invoice with index {invoice_index} not exists.")
-                return
-            # Print invoice
-            print(f"Wybrałes fakture {invoice.id}")
-
-            payments = self.database.get_payments(invoice_id=invoice.id)
-
-            if len(payments) == 0:
-                logger.info(f"Brak płatnosci dla faktury {invoice.id}")
-                return
-
-            # Print available payments
-            self.print_available_payments(payments)
-
-            payment_index = int(input("Wprowadz index płatności: "))
             # Load data from database
             self.database.load()
+            invoice = self.ask_for_invoice_index()
 
-            payment = payments[payment_index]
-
-            # Check if payment exists in database
-            if payment is None:
-                logger.error(f"Payment with index {payment_index} not exists.")
+            if invoice is None:
                 return
 
-            print(payment)
+            payment = self.ask_for_payment_index(invoice_id=invoice.id)
 
             # Calculate exchange rate difference
             (
@@ -262,6 +273,99 @@ Różnica: {exchange_rate_difference:.2f}
 
         except NBPApiError as e:
             logger.error("Something went wrong: %s", e)
+
+
+class CheckInvoiceStatusAction(WithDatabaseAction):
+    """CheckInvoiceStatusAction class for creating check invoice status action in interactive menu."""
+
+    def __init__(  # noqa: PLR0913
+        self,
+        name: str,
+        tag: str,
+        description: str,
+        database: Database,
+        nbp_api_client: NBPApiClient,
+    ) -> None:
+        """Initialize CalculateExchangeRateDifferenceAction class."""
+        super().__init__(name, tag, description, database)
+        self.nbp_api_client = nbp_api_client
+
+    def sum_of_payments(self, payments: list[Payment]) -> float:
+        """
+        Calculate sum of payments.
+
+        For make it easier we calculate sum of payments in PLN.
+        So if payment currency is not PLN then we calculate exchange rate.
+        """
+        sum_of_payments = 0
+        for payment in payments:
+            # if payment is in PLN then we can add payment amount to sum of payments
+            if payment.currency == "PLN":
+                sum_of_payments += payment.amount
+            # If payment currency is not PLN then we need to calculate exchange rate
+            else:
+                payment_exchange_rate = self.nbp_api_client.get_exchange_rate(
+                    ExchangeRateSchema(
+                        table="A", code=payment.currency, date=payment.date
+                    )
+                )
+                sum_of_payments += payment.amount * payment_exchange_rate.rates[0].mid
+        return sum_of_payments
+
+    def calculate_invoice_amount(self, invoice: Invoice) -> float:
+        """
+        Calculate invoice amount.
+
+        For make it easier we calculate invoice amount in PLN.
+        So if invoice currency is not PLN then we calculate exchange rate.
+        """
+        # If invoice currency is not PLN then we need to calculate exchange rate
+        if invoice.currency != "PLN":
+            invoice_exchange_rate = self.nbp_api_client.get_exchange_rate(
+                ExchangeRateSchema(table="A", code=invoice.currency, date=invoice.date)
+            )
+            return invoice.amount * invoice_exchange_rate.rates[0].mid
+        return invoice.amount
+
+    def execute(self) -> None:
+        """Execute action for checking invoice status."""
+        try:
+            self.database.load()
+            invoice = self.ask_for_invoice_index()
+            if invoice is None:
+                return
+            payments = self.database.get_payments(invoice_id=invoice.id)
+            if len(payments) == 0:
+                print("Brak płatności dla tej faktury")
+                return
+            self.print_available_payments(payments)
+
+            # Calculate sum of payments
+            sum_of_payments = self.sum_of_payments(payments=payments)
+            # Calculate invoice amount
+            invoice_amount = self.calculate_invoice_amount(invoice=invoice)
+
+            print(
+                f"Kwota faktury: <{invoice.amount} | {invoice.currency}> {invoice_amount:.2f} PLN"
+            )
+            print(f"Suma płatności: {sum_of_payments:.2f} PLN")
+            print("Status faktury: ", end="")
+
+            # Check invoice status
+            # If invoice amount is equal to sum of payments then invoice is paid
+            if invoice_amount == sum_of_payments:
+                print("Faktura opłacona")
+            # If invoice amount is greater than sum of payments then invoice is not paid
+            elif invoice_amount > sum_of_payments:
+                print(
+                    f"Brakuje {invoice_amount - sum_of_payments:.2f} PLN do opłacenia faktury"
+                )
+            # If invoice amount is less than sum of payments then invoice is overpaid
+            elif invoice_amount < sum_of_payments:
+                print(f"Przeplacono {sum_of_payments - invoice_amount:.2f} PLN")
+
+        except (FileNotFoundError, ValueError, NBPApiError) as e:
+            logger.error("Something went wrong: <%s> %s", e.__class__.__name__, e)
 
 
 class InteractiveMenu:
@@ -310,7 +414,7 @@ class InteractiveMenu:
             os.system("clear")  # noqa: S605, S607
             action = self.actions[action_id - 1]
             logger.debug("Run action: %s", action)
-            print(f"**{action.name}**")
+            print(f"**{action.name}**\n{action.description}\n")
             action.execute()
         except IndexError:
             logger.error("Action with id %s not exists.", action_id)
