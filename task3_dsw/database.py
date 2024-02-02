@@ -5,10 +5,10 @@ import datetime  # noqa: TCH003
 import json
 import uuid
 from pathlib import Path
-from venv import logger
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
+from task3_dsw.logger import logger
 from task3_dsw.settings import (
     Settings,
     settings,
