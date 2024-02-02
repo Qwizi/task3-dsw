@@ -3,7 +3,7 @@
 import logging
 import sys
 
-from task3_dsw import settings
+from task3_dsw.settings import settings
 
 logger = logging.getLogger("Task3 DSW Logger")
 
