@@ -54,6 +54,7 @@ After following the installation steps, you can start using the program to calcu
 cd task3_dsw
 python main.py -i -v
 ```
+![Usage](usage.gif)
 
 ## Features check list
 - [x] Konfiguracja walut
