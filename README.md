@@ -60,7 +60,7 @@ python main.py -i -v
 - [x] Konfiguracja walut
 - [x] Wprowadzanie danych płatności
 - [x] Pobieranie kursów walut
-- [ ] Wyliczanie różnic kursowych
+- [x] Wyliczanie różnic kursowych
 - [x] Zapis danych do pliku
 - [ ] Dokumentacja
 - [x] Obsługa błędów i walidacja danych
@@ -68,10 +68,10 @@ python main.py -i -v
 - [x] Standardy Nazewnictwa i Komentarze
 - [ ] Raport Projektowy
 - [x] Przestrzeganie Standardów PEP 8
-- [ ] Dokumentacja Kodu
+- [x] Dokumentacja Kodu
 - [x] Wprowadzanie danych faktury
-- [ ] Podsumowanie płatności
-- [ ] Optymalizacja Wydajności
+- [x] Podsumowanie płatności
+- [x] Optymalizacja Wydajności
 - [ ] Tryb wsadowy i dokumentacja
 - [x] Tryp interaktywny
 - [x] Zarządzanie Kodem za Pomocą Git
@@ -79,4 +79,3 @@ python main.py -i -v
 
 ## Legal info
 © Copyright by Adrian Ciołek (@Qwizi), Mateusz Cyran (@Kuis03), Kamil Duszyński (@VirdisPl).
-test 123
