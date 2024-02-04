@@ -1,1 +1,174 @@
-{"invoices":[{"id":"8ee40eb0-9d7e-4021-a76f-ee3186118e05","amount":100.0,"currency":"USD","date":"2021-01-01"},{"id":"90cd99f3-1b08-4b2f-ba81-a35e1a846ff5","amount":100.0,"currency":"USD","date":"2021-01-01"},{"id":"a4ff07dc-7991-4a43-a227-c1507a6e3d72","amount":222.0,"currency":"EUR","date":"2020-01-02"}],"payments":[{"id":"b7608e14-dd6b-40c5-98de-e966c0509d36","amount":255.0,"currency":"EUR","date":"2020-01-20","invoice_id":"8ee40eb0-9d7e-4021-a76f-ee3186118e05"}]}
+{
+    "invoices": [
+        {
+            "id": "a100a632-04d0-44bc-b77b-b07ab82de1ad",
+            "amount": 199.0,
+            "currency": "EUR",
+            "date": "2020-01-02",
+            "status": "Zaplacona"
+        },
+        {
+            "id": "ddf2d4f4-5a51-4e52-b54c-ad835be527e7",
+            "amount": 100.0,
+            "currency": "PLN",
+            "date": "2020-10-01",
+            "status": "Nie zaplacona"
+        },
+        {
+            "id": "5a03ecbb-17de-4d5c-94c0-864fa989fee4",
+            "amount": 100.0,
+            "currency": "PLN",
+            "date": "2020-01-21",
+            "status": "Nadplacona"
+        },
+        {
+            "id": "70ca8053-a98c-48cc-9163-b43024ef20ac",
+            "amount": 50.0,
+            "currency": "EUR",
+            "date": "2024-10-01"
+        },
+        {
+            "id": "4f3c133b-2542-4490-9f86-529e9e83b0fc",
+            "amount": 1000.0,
+            "currency": "EUR",
+            "date": "2024-01-29"
+        },
+        {
+            "id": "c85230c3-ed1d-466c-a073-55a97807ae5d",
+            "amount": 5000.0,
+            "currency": "EUR",
+            "date": "2024-01-29"
+        },
+        {
+            "id": "1bec7f79-a6c8-44b7-96bb-be51148e2353",
+            "amount": 1000.0,
+            "currency": "PLN",
+            "date": "2024-01-15"
+        },
+        {
+            "id": "438d4640-599b-447d-9914-7fbbf07e7495",
+            "amount": 5000.0,
+            "currency": "PLN",
+            "date": "2024-01-25"
+        },
+        {
+            "id": "e2a63216-f799-43c3-9138-39d5d96253b1",
+            "amount": 100.0,
+            "currency": "EUR",
+            "date": "2024-01-01"
+        },
+        {
+            "id": "35d6850c-0239-475d-89b1-668c79090e1c",
+            "amount": 1000.0,
+            "currency": "EUR",
+            "date": "2024-01-31"
+        },
+        {
+            "id": "90b16a97-1d07-4198-93e5-6df1da1199b4",
+            "amount": 1000.0,
+            "currency": "PLN",
+            "date": "2024-01-31"
+        }
+    ],
+    "payments": [
+        {
+            "id": "d15eb5c9-4175-4b3e-8697-182439547837",
+            "invoice_id": "a100a632-04d0-44bc-b77b-b07ab82de1ad",
+            "amount": 100.0,
+            "currency": "EUR",
+            "date": "2020-01-02",
+            "exchange_rate_difrence": "15.0"
+        },
+        {
+            "id": "4de62422-f3e5-41e4-b714-b5deed45481f",
+            "invoice_id": "70ca8053-a98c-48cc-9163-b43024ef20ac",
+            "amount": 50.0,
+            "currency": "EUR",
+            "date": "2024-01-13"
+        },
+        {
+            "id": "db1c736f-1513-466e-b77e-ed360fede4d8",
+            "invoice_id": "a100a632-04d0-44bc-b77b-b07ab82de1ad",
+            "amount": 100.0,
+            "currency": "EUR",
+            "date": "2024-01-29"
+        },
+        {
+            "id": "7a7f34a7-28d1-4330-991c-6155381c6a43",
+            "invoice_id": "ddf2d4f4-5a51-4e52-b54c-ad835be527e7",
+            "amount": 1.0,
+            "currency": "EUR",
+            "date": "2024-01-29"
+        },
+        {
+            "id": "1d8a96f7-2749-44fa-867a-9d22ecd03a3e",
+            "invoice_id": "c85230c3-ed1d-466c-a073-55a97807ae5d",
+            "amount": 100.0,
+            "currency": "EUR",
+            "date": "2024-01-29"
+        },
+        {
+            "id": "3ed73ddc-a14b-4605-b90d-f863e26378f8",
+            "invoice_id": "c85230c3-ed1d-466c-a073-55a97807ae5d",
+            "amount": 100.0,
+            "currency": "EUR",
+            "date": "2024-01-10"
+        },
+        {
+            "id": "32cdb903-4f34-4e06-b049-e23611b34a91",
+            "invoice_id": "1bec7f79-a6c8-44b7-96bb-be51148e2353",
+            "amount": 500.0,
+            "currency": "EUR",
+            "date": "2024-01-29"
+        },
+        {
+            "id": "dcd7d964-b5bf-4760-8ad6-55f85da406e7",
+            "invoice_id": "438d4640-599b-447d-9914-7fbbf07e7495",
+            "amount": 100.0,
+            "currency": "EUR",
+            "date": "2024-01-31"
+        },
+        {
+            "id": "1400d997-f791-494a-adbf-d399a3faa5f2",
+            "invoice_id": "c85230c3-ed1d-466c-a073-55a97807ae5d",
+            "amount": 50.0,
+            "currency": "PLN",
+            "date": "2024-01-31"
+        },
+        {
+            "id": "70779523-4329-4333-9f1a-a6d4294e864a",
+            "invoice_id": "c85230c3-ed1d-466c-a073-55a97807ae5d",
+            "amount": 1000.0,
+            "currency": "USD",
+            "date": "2024-01-31"
+        },
+        {
+            "id": "9fc3bdef-0867-44e3-b73c-a29ee1529af4",
+            "invoice_id": "438d4640-599b-447d-9914-7fbbf07e7495",
+            "amount": 4000.0,
+            "currency": "PLN",
+            "date": "2024-01-31"
+        },
+        {
+            "id": "f264c80f-2f84-4ff5-80ff-188a4693e436",
+            "invoice_id": "4f3c133b-2542-4490-9f86-529e9e83b0fc",
+            "amount": 100.0,
+            "currency": "GBP",
+            "date": "2024-01-31"
+        },
+        {
+            "id": "3204d7ca-bee5-4a72-8b3e-4c0cb3b09990",
+            "invoice_id": "c85230c3-ed1d-466c-a073-55a97807ae5d",
+            "amount": 10000.0,
+            "currency": "EUR",
+            "date": "2024-01-31"
+        },
+        {
+            "id": "7a4ca817-316e-4994-b090-dcc6288001de",
+            "invoice_id": "e2a63216-f799-43c3-9138-39d5d96253b1",
+            "amount": 100.0,
+            "currency": "EUR",
+            "date": "2024-01-31"
+        }
+    ]
+}

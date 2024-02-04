@@ -63,7 +63,7 @@ def main() -> None:
     nbp_api_client = NBPApiClient()
 
     # initialize Database
-    database = Database(settings=settings)
+    database = Database(settings=settings, nbp_api_client=nbp_api_client)
     database.load()
 
     if args.interactive:
