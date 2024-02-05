@@ -6,7 +6,7 @@ import sys
 
 from task3_dsw.database import AddInvoice, AddPayment, Database, Invoice, Payment
 from task3_dsw.logger import logger
-from task3_dsw.nbp_api import ExchangeRateSchema, NBPApiClient, NBPApiError
+from task3_dsw.nbp_api import NBPApiClient, NBPApiError
 
 
 class Action:
@@ -249,9 +249,7 @@ class CalculateExchangeRateDifferenceAction(WithDatabaseAction):
                 invoice_exchange_rate,
                 payment_exchange_rate,
                 exchange_rate_difference,
-            ) = self.nbp_api_client.calculate_difference(
-                invoice=invoice, payment=payment
-            )
+            ) = self.database.calculate_difference(invoice=invoice, payment=payment)
 
             if exchange_rate_difference == 0:
                 print("Brak różnicy kursowej")
@@ -265,6 +263,7 @@ Płatność: <kod waluty: {payment_exchange_rate.code} | data: {payment_exchange
 Różnica: {exchange_rate_difference:.2f}
 """
             )
+            self.database.save()
         except ValueError as e:
             logger.error("Invalid value: %s", e)
 
@@ -290,43 +289,6 @@ class CheckInvoiceStatusAction(WithDatabaseAction):
         super().__init__(name, tag, description, database)
         self.nbp_api_client = nbp_api_client
 
-    def sum_of_payments(self, payments: list[Payment]) -> float:
-        """
-        Calculate sum of payments.
-
-        For make it easier we calculate sum of payments in PLN.
-        So if payment currency is not PLN then we calculate exchange rate.
-        """
-        sum_of_payments = 0
-        for payment in payments:
-            # if payment is in PLN then we can add payment amount to sum of payments
-            if payment.currency == "PLN":
-                sum_of_payments += payment.amount
-            # If payment currency is not PLN then we need to calculate exchange rate
-            else:
-                payment_exchange_rate = self.nbp_api_client.get_exchange_rate(
-                    ExchangeRateSchema(
-                        table="A", code=payment.currency, date=payment.date
-                    )
-                )
-                sum_of_payments += payment.amount * payment_exchange_rate.rates[0].mid
-        return sum_of_payments
-
-    def calculate_invoice_amount(self, invoice: Invoice) -> float:
-        """
-        Calculate invoice amount.
-
-        For make it easier we calculate invoice amount in PLN.
-        So if invoice currency is not PLN then we calculate exchange rate.
-        """
-        # If invoice currency is not PLN then we need to calculate exchange rate
-        if invoice.currency != "PLN":
-            invoice_exchange_rate = self.nbp_api_client.get_exchange_rate(
-                ExchangeRateSchema(table="A", code=invoice.currency, date=invoice.date)
-            )
-            return invoice.amount * invoice_exchange_rate.rates[0].mid
-        return invoice.amount
-
     def execute(self) -> None:
         """Execute action for checking invoice status."""
         try:
@@ -334,35 +296,17 @@ class CheckInvoiceStatusAction(WithDatabaseAction):
             invoice = self.ask_for_invoice_index()
             if invoice is None:
                 return
-            payments = self.database.get_payments(invoice_id=invoice.id)
-            if len(payments) == 0:
-                print("Brak płatności dla tej faktury")
-                return
-            self.print_available_payments(payments)
-
-            # Calculate sum of payments
-            sum_of_payments = self.sum_of_payments(payments=payments)
-            # Calculate invoice amount
-            invoice_amount = self.calculate_invoice_amount(invoice=invoice)
-
+            (
+                sum_of_payments,
+                invoice_amount,
+                status,
+            ) = self.database.calulate_payments_for_invoice(invoice=invoice)
+            self.database.save()
             print(
                 f"Kwota faktury: <{invoice.amount} | {invoice.currency}> {invoice_amount:.2f} PLN"
             )
             print(f"Suma płatności: {sum_of_payments:.2f} PLN")
-            print("Status faktury: ", end="")
-
-            # Check invoice status
-            # If invoice amount is equal to sum of payments then invoice is paid
-            if invoice_amount == sum_of_payments:
-                print("Faktura opłacona")
-            # If invoice amount is greater than sum of payments then invoice is not paid
-            elif invoice_amount > sum_of_payments:
-                print(
-                    f"Brakuje {invoice_amount - sum_of_payments:.2f} PLN do opłacenia faktury"
-                )
-            # If invoice amount is less than sum of payments then invoice is overpaid
-            elif invoice_amount < sum_of_payments:
-                print(f"Przeplacono {sum_of_payments - invoice_amount:.2f} PLN")
+            print(f"Status faktury: {status.value}")
 
         except (FileNotFoundError, ValueError, NBPApiError) as e:
             logger.error("Something went wrong: <%s> %s", e.__class__.__name__, e)
