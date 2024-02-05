@@ -14,6 +14,7 @@ from task3_dsw.nbp_api import (
     ExchangeRateSchema,
     ExchangeRateSchemaResponse,
     NBPApiClient,
+    RateSchema,
 )
 from task3_dsw.settings import (
     Settings,
@@ -342,36 +343,66 @@ class Database:
             if invoice.currency == payment.currency:
                 self.data.payments[payment_index].exchange_rate_difference = 0
                 return None, None, 0
-
-            invoice_exchange_rate = (
-                invoice.exchange_rate
-                if invoice.exchange_rate
-                else self.nbp_api_client.get_exchange_rate(
-                    ExchangeRateSchema(
-                        code=invoice.currency,
-                        date=invoice.date,
+            invoice_exchange_rate = None
+            
+            if invoice.currency == "PLN":
+                invoice_exchange_rate = ExchangeRateSchemaResponse(
+                    table = "a",
+                    currency = "Polski Złoty",
+                    code = "PLN",
+                    rates = [RateSchema(
+                        no = "JD",
+                        effectiveDate = datetime.date.today(),
+                        mid = 1
+                    
+                )]
+            )
+            else:
+                
+                invoice_exchange_rate = (
+                    invoice.exchange_rate
+                    if invoice.exchange_rate
+                    else self.nbp_api_client.get_exchange_rate(
+                        ExchangeRateSchema(
+                            code=invoice.currency,
+                            date=invoice.date,
+                        )
                     )
                 )
+            payment_exchange_rate = None
+            if payment.currency == "PLN":
+                payment_exchange_rate = ExchangeRateSchemaResponse(
+                    table = "a",
+                    currency = "Polski Złoty",
+                    code = "PLN",
+                    rates = [RateSchema(
+                        no = "JD",
+                        effectiveDate = datetime.date.today(),
+                        mid = 1
+                    
+                )]
             )
-            payment_exchange_rate = (
-                payment.exchange_rate
-                if payment.exchange_rate
-                else self.nbp_api_client.get_exchange_rate(
-                    ExchangeRateSchema(
-                        code=payment.currency,
-                        date=payment.date,
+            else:
+                payment_exchange_rate = (
+                    payment.exchange_rate
+                    if payment.exchange_rate
+                    else self.nbp_api_client.get_exchange_rate(
+                        ExchangeRateSchema(
+                            code=payment.currency,
+                            date=payment.date,
+                        )
                     )
                 )
-            )
 
             echange_rate_difference = (
-                payment.exchange_rate_difference
-                if payment.exchange_rate_difference > 0
-                else (
+               
+                
                     payment_exchange_rate.rates[0].mid
-                    - invoice_exchange_rate.rates[0].mid
-                )
-                * invoice.amount
+                     - invoice_exchange_rate.rates[0].mid
+                   
+                   
+                
+              
             )
             self.data.payments[
                 payment_index

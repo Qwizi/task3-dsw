@@ -12,15 +12,12 @@ class Settings(BaseSettings):
     ----------
         DEBUG: bool - debug mode
         CURRENCIES: list[str] - list of valid currencies
-        INVOICES_FILE_PATH: str - path to invoices file
-        PAYMENTS_FILE_PATH: str - path to payments file
+        
     """
 
     DEBUG: bool = False
     DATABASE_PATH: str = "./data/database.json"
-    INVOICES_FILE_PATH: str = "./data/invoices.csv"
-    PAYMENTS_FILE_PATH: str = "./data/payments.csv"
-    CURRENCIES: list[str] = ["EUR", "USD", "GBP"]
+    CURRENCIES: list[str] = ["EUR", "USD", "GBP","PLN"]
 
 
 settings = Settings()
