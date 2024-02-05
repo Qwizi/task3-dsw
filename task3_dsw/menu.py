@@ -263,6 +263,7 @@ Płatność: <kod waluty: {payment_exchange_rate.code} | data: {payment_exchange
 Różnica: {exchange_rate_difference:.2f}
 """
             )
+            self.database.save()
         except ValueError as e:
             logger.error("Invalid value: %s", e)
 

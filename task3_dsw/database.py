@@ -271,7 +271,7 @@ class Database:
 
         Returns:
         -------
-            tuple[int, float, InvoiceStatus]
+            tuple[sum_of_payments(int), invoice_amount(float), InvoiceStatus]
         """
         try:
             invoice_index = self.data.invoices.index(invoice)
@@ -348,7 +348,7 @@ class Database:
                 if invoice.exchange_rate
                 else self.nbp_api_client.get_exchange_rate(
                     ExchangeRateSchema(
-                        code=payment.currency,
+                        code=invoice.currency,
                         date=invoice.date,
                     )
                 )
