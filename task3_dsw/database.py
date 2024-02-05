@@ -1,7 +1,7 @@
 """Database module."""
 from __future__ import annotations
 
-import datetime  # noqa: TCH003
+import datetime
 import enum
 import json
 import uuid
@@ -344,21 +344,21 @@ class Database:
                 self.data.payments[payment_index].exchange_rate_difference = 0
                 return None, None, 0
             invoice_exchange_rate = None
-            
+
             if invoice.currency == "PLN":
                 invoice_exchange_rate = ExchangeRateSchemaResponse(
-                    table = "a",
-                    currency = "Polski Złoty",
-                    code = "PLN",
-                    rates = [RateSchema(
-                        no = "JD",
-                        effectiveDate = datetime.date.today(),
-                        mid = 1
-                    
-                )]
-            )
+                    table="a",
+                    currency="Polski Złoty",
+                    code="PLN",
+                    rates=[
+                        RateSchema(
+                            no="JD",
+                            effectiveDate=datetime.date.today(),  # noqa: DTZ011
+                            mid=1,
+                        )
+                    ],
+                )
             else:
-                
                 invoice_exchange_rate = (
                     invoice.exchange_rate
                     if invoice.exchange_rate
@@ -372,16 +372,17 @@ class Database:
             payment_exchange_rate = None
             if payment.currency == "PLN":
                 payment_exchange_rate = ExchangeRateSchemaResponse(
-                    table = "a",
-                    currency = "Polski Złoty",
-                    code = "PLN",
-                    rates = [RateSchema(
-                        no = "JD",
-                        effectiveDate = datetime.date.today(),
-                        mid = 1
-                    
-                )]
-            )
+                    table="a",
+                    currency="Polski Złoty",
+                    code="PLN",
+                    rates=[
+                        RateSchema(
+                            no="JD",
+                            effectiveDate=datetime.date.today(),  # noqa: DTZ011
+                            mid=1,
+                        )
+                    ],
+                )
             else:
                 payment_exchange_rate = (
                     payment.exchange_rate
@@ -395,14 +396,7 @@ class Database:
                 )
 
             echange_rate_difference = (
-               
-                
-                    payment_exchange_rate.rates[0].mid
-                     - invoice_exchange_rate.rates[0].mid
-                   
-                   
-                
-              
+                payment_exchange_rate.rates[0].mid - invoice_exchange_rate.rates[0].mid
             )
             self.data.payments[
                 payment_index
