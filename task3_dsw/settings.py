@@ -12,12 +12,12 @@ class Settings(BaseSettings):
     ----------
         DEBUG: bool - debug mode
         CURRENCIES: list[str] - list of valid currencies
-        
+
     """
 
     DEBUG: bool = False
     DATABASE_PATH: str = "./data/database.json"
-    CURRENCIES: list[str] = ["EUR", "USD", "GBP","PLN"]
+    CURRENCIES: list[str] = ["EUR", "USD", "GBP", "PLN"]
 
 
 settings = Settings()
