@@ -41,7 +41,19 @@ def create_parser() -> argparse.ArgumentParser:
         type=str,
         help="File with invoices",
     )
-    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode.")
+    parser.add_argument(
+        "-v", 
+        "--verbose",
+        action="store_true",
+        help="Verbose mode."
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        help="Nazwa pliku wynikowego"
+    )
+    
     return parser
 
 
@@ -110,7 +122,18 @@ def main() -> None:
         interactive_menu.run()
     else:
         logger.debug("We are in non-interactive mode.")
-
+        if args.file:
+            settings.DATABASE_PATH = args.file
+            database = Database(settings = settings, nbp_api_client = nbp_api_client, output_file="output.json" if args.output is None else args.output)
+            database.load()
+            invoices = database.get_invoices()
+            for invoice in invoices:
+                database.calulate_payments_for_invoice(invoice)
+                payments = database.get_payments(invoice.id)
+                for payment in payments:
+                    database.calculate_difference(invoice, payment)
+                database.save()
+                
 
 if __name__ == "__main__":
     main()

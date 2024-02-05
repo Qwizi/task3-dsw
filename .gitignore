@@ -385,3 +385,6 @@ pyrightconfig.json
 # End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode
 
 task3_dsw/data/database.json
+test.json
+output.json
+output_test.json
