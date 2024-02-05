@@ -24,9 +24,9 @@ from task3_dsw.settings import (
 class InvoiceStatus(str, enum.Enum):
     """Invoice status type."""
 
-    PAID = "Zapłacona"
-    UNPAID = "Nie zapłacona"
-    OVERPAID = "Nadpłata"
+    PAID = "Zaplacona"
+    UNPAID = "Nie zaplacona"
+    OVERPAID = "Nadplata"
 
 
 class AddInvoice(BaseModel):
