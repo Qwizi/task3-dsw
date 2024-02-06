@@ -7,8 +7,11 @@ watch:
 - "task3_dsw"
 
 nav:
-- "Overview": "index.md"
-- "API Reference": "api.md"
+- "Strona główna": "index.md"
+- "Instalacja": "installation.md"
+- "Konfiguracja walut": "currency.md"
+- "Tryb interaktywny": "interactive.md"
+- "Dokumentacja Kodu": "code.md"
 
 theme:
   name: "material"
