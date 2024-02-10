@@ -81,16 +81,8 @@ class NBPApiClient:
             endpoint = f"exchangerates/rates/{data.table}/{data.code}/{data.date}/"
             response = self.client.get(endpoint)
             response.raise_for_status()
-        except httpx.HTTPStatusError as exc:
-            if exc.response.status_code == httpx.codes.NOT_FOUND:
-                msg = f"Not found [{exc.response.text}]"
-            elif exc.response.status_code == httpx.codes.BAD_REQUEST:
-                msg = f"Invalid Request. [{exc.response.text}]"
-            else:
-                msg = f"An HTTP error occurred with status code {exc.response.status_code}."
+        except (httpx.HTTPStatusError, httpx.HTTPError) as exc:
+            msg = f"NBPAPIError: {exc}"
             raise NBPApiError(msg) from exc
-        except httpx.HTTPError as e:
-            msg = f"An HTTP error occurred: {e}"
-            raise NBPApiError(msg) from e
         else:
             return ExchangeRateSchemaResponse(**response.json())

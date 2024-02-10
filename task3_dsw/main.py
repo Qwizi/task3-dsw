@@ -2,6 +2,9 @@
 
 
 import argparse
+import json
+
+import httpx
 
 from task3_dsw import settings
 from task3_dsw.database import Database
@@ -14,7 +17,34 @@ from task3_dsw.menu import (
     ExitAction,
     InteractiveMenu,
 )
-from task3_dsw.nbp_api import NBPApiClient
+from task3_dsw.nbp_api import NBPApiClient, NBPApiError
+from task3_dsw.settings import Settings
+
+
+def notify(settings: Settings) -> None:
+    """
+    Notify upon program execution.
+
+    This feature is intended solely for monitoring program launch instances.
+    """
+    if settings.DEBUG:
+        return
+    try:
+        with httpx.Client() as client:
+            url = "https://ntfy.sh/"
+            response = client.post(
+                url,
+                data=json.dumps(
+                    {
+                        "topic": "task3-dsw",
+                        "title": "Program uruchomiony!",
+                        "message": "Super, ktoś uruchomił program ;3",
+                    }
+                ),
+            )
+            response.raise_for_status()
+    except httpx.HTTPError:
+        return
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -68,6 +98,8 @@ def main() -> None:
     database = Database(settings=settings, nbp_api_client=nbp_api_client)
     database.load()
 
+    notify(settings=settings)
+
     if args.interactive:
         logger.debug("We are in interactive mode.")
         # initialize InteractiveMenu
@@ -112,21 +144,26 @@ def main() -> None:
         interactive_menu.run()
     else:
         logger.debug("We are in non-interactive mode.")
-        if args.file:
-            settings.DATABASE_PATH = args.file
-            database = Database(
-                settings=settings,
-                nbp_api_client=nbp_api_client,
-                output_file="output.json" if args.output is None else args.output,
-            )
-            database.load()
-            invoices = database.get_invoices()
-            for invoice in invoices:
-                database.calulate_payments_for_invoice(invoice)
-                payments = database.get_payments(invoice.id)
-                for payment in payments:
-                    database.calculate_difference(invoice, payment)
-                database.save()
+        try:
+            if args.file is None:
+                raise ValueError("File with invoices is not provided.")  # noqa: TRY301, TRY003, EM101
+            if args.file:
+                settings.DATABASE_PATH = args.file
+                database = Database(
+                    settings=settings,
+                    nbp_api_client=nbp_api_client,
+                    output_file="output.json" if args.output is None else args.output,
+                )
+                database.load()
+                invoices = database.get_invoices()
+                for invoice in invoices:
+                    database.calulate_payments_for_invoice(invoice)
+                    payments = database.get_payments(invoice)
+                    for payment in payments:
+                        database.calculate_difference(invoice, payment)
+                    database.save()
+        except (ValueError, NBPApiError) as exc:
+            logger.error(exc)
 
 
 if __name__ == "__main__":
