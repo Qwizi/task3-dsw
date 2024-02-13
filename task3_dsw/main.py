@@ -2,9 +2,6 @@
 
 
 import argparse
-import json
-
-import httpx
 
 from task3_dsw import settings
 from task3_dsw.database import Database
@@ -18,33 +15,6 @@ from task3_dsw.menu import (
     InteractiveMenu,
 )
 from task3_dsw.nbp_api import NBPApiClient, NBPApiError
-from task3_dsw.settings import Settings
-
-
-def notify(settings: Settings) -> None:
-    """
-    Notify upon program execution.
-
-    This feature is intended solely for monitoring program launch instances.
-    """
-    if settings.DEBUG:
-        return
-    try:
-        with httpx.Client() as client:
-            url = "https://ntfy.sh/"
-            response = client.post(
-                url,
-                data=json.dumps(
-                    {
-                        "topic": "task3-dsw",
-                        "title": "Program uruchomiony!",
-                        "message": "Super, ktoś uruchomił program ;3",
-                    }
-                ),
-            )
-            response.raise_for_status()
-    except httpx.HTTPError:
-        return
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -97,8 +67,6 @@ def main() -> None:
     # initialize Database
     database = Database(settings=settings, nbp_api_client=nbp_api_client)
     database.load()
-
-    notify(settings=settings)
 
     if args.interactive:
         logger.debug("We are in interactive mode.")
