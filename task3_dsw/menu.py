@@ -109,7 +109,7 @@ class WithDatabaseAction(Action):
         print(f"Wybrałes fakture {invoice}")
         return invoice
 
-    def ask_for_payment_index(self, invoice_id: str) -> Payment | None:
+    def ask_for_payment_index(self, invoice: Invoice) -> Payment | None:
         """
         Ask user for payment index.
 
@@ -117,10 +117,10 @@ class WithDatabaseAction(Action):
         -------
             int: payment index
         """
-        payments = self.database.get_payments(invoice_id=invoice_id)
+        payments = self.database.get_payments(invoice)
 
         if len(payments) == 0:
-            msg = f"Brak płatnosci dla faktury {invoice_id}"
+            msg = f"Brak płatnosci dla faktury {invoice}"
             raise ValueError(msg)
 
             # Print available payments
@@ -202,9 +202,8 @@ class AddPaymentAction(WithDatabaseAction):
 
             # Add payment to database
             payment_schema = self.database.add_payment(
-                payment=AddPayment(
-                    amount=amount, currency=currency, date=date, invoice_id=invoice.id
-                )
+                invoice=invoice,
+                payment=AddPayment(amount=amount, currency=currency, date=date),
             )
 
             # Save data to database
@@ -242,14 +241,14 @@ class CalculateExchangeRateDifferenceAction(WithDatabaseAction):
             if invoice is None:
                 return
 
-            payment = self.ask_for_payment_index(invoice_id=invoice.id)
+            payment = self.ask_for_payment_index(invoice)
 
             # Calculate exchange rate difference
-            (
-                invoice_exchange_rate,
-                payment_exchange_rate,
-                exchange_rate_difference,
-            ) = self.database.calculate_difference(invoice=invoice, payment=payment)
+
+            exchange_rate_difference = self.database.calculate_difference(
+                invoice=invoice, payment=payment
+            )
+            logger.debug("Exchange rate difference: %s", exchange_rate_difference)
 
             if exchange_rate_difference == 0:
                 print("Brak różnicy kursowej")
@@ -258,9 +257,7 @@ class CalculateExchangeRateDifferenceAction(WithDatabaseAction):
             print(
                 f""""
 **Różnica kursowa**: \n
-Faktura: <kod waluty: {invoice_exchange_rate.code} | data: {invoice_exchange_rate.rates[0].effectiveDate} | kurs: {invoice_exchange_rate.rates[0].mid}> \n
-Płatność: <kod waluty: {payment_exchange_rate.code} | data: {payment_exchange_rate.rates[0].effectiveDate} | kurs: {payment_exchange_rate.rates[0].mid}> \n
-Różnica: {exchange_rate_difference:.2f}
+Różnica: {exchange_rate_difference} {payment.currency} \n
 """
             )
             self.database.save()

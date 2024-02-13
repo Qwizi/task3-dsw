@@ -1,10 +1,9 @@
 """Database module."""
 from __future__ import annotations
 
-import datetime
+import datetime  # noqa: TCH003
 import enum
 import json
-import uuid
 from pathlib import Path
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
@@ -14,7 +13,7 @@ from task3_dsw.nbp_api import (
     ExchangeRateSchema,
     ExchangeRateSchemaResponse,
     NBPApiClient,
-    RateSchema,
+    NBPApiError,
 )
 from task3_dsw.settings import (
     Settings,
@@ -30,45 +29,9 @@ class InvoiceStatus(str, enum.Enum):
     OVERPAID = "Nadplata"
 
 
-class AddInvoice(BaseModel):
-    """Add invoice model."""
-
-    id: uuid.UUID = Field(default_factory=uuid.uuid4)  # noqa: A003, RUF100
-    amount: float
-    currency: str
-    date: datetime.date
-    status: InvoiceStatus = InvoiceStatus.UNPAID
-    exchange_rate: ExchangeRateSchemaResponse = None
-
-    @field_validator("currency")
-    def currency_is_valid(cls, v) -> str:  # noqa: N805, ANN001
-        """Validate currency code."""
-        if v not in settings.CURRENCIES and v != "PLN":
-            msg = f"Currency code {v} is not valid."
-            raise ValueError(msg)
-        return v
-
-
-class Invoice(BaseModel):
-    """Invoice model."""
-
-    id: uuid.UUID
-    amount: float
-    currency: str
-    date: datetime.date
-    status: InvoiceStatus
-    exchange_rate: ExchangeRateSchemaResponse | None
-
-    def __str__(self) -> str:
-        """Return string representation of invoice."""
-        return f"<{self.id} | {self.amount} | {self.currency} | {self.date} | {self.status}>"
-
-
 class AddPayment(BaseModel):
     """Add payment model."""
 
-    id: uuid.UUID = Field(default_factory=uuid.uuid4)
-    invoice_id: uuid.UUID
     amount: float
     currency: str
     date: datetime.date
@@ -87,8 +50,6 @@ class AddPayment(BaseModel):
 class Payment(BaseModel):
     """Payment model."""
 
-    id: uuid.UUID
-    invoice_id: uuid.UUID
     amount: float
     currency: str
     date: datetime.date
@@ -97,14 +58,47 @@ class Payment(BaseModel):
 
     def __str__(self) -> str:
         """Return string representation of payment."""
-        return f"<{self.id} | {self.invoice_id} | {self.amount} | {self.currency} | {self.date}>"
+        return f"<{self.amount} | {self.currency} | {self.date}>"
+
+
+class AddInvoice(BaseModel):
+    """Add invoice model."""
+
+    amount: float
+    currency: str
+    date: datetime.date
+    status: InvoiceStatus = InvoiceStatus.UNPAID
+    exchange_rate: ExchangeRateSchemaResponse = None
+    payments: list[Payment] = []
+
+    @field_validator("currency")
+    def currency_is_valid(cls, v) -> str:  # noqa: N805, ANN001
+        """Validate currency code."""
+        if v not in settings.CURRENCIES and v != "PLN":
+            msg = f"Currency code {v} is not valid."
+            raise ValueError(msg)
+        return v
+
+
+class Invoice(BaseModel):
+    """Invoice model."""
+
+    amount: float
+    currency: str
+    date: datetime.date
+    status: InvoiceStatus
+    exchange_rate: ExchangeRateSchemaResponse | None
+    payments: list[Payment]
+
+    def __str__(self) -> str:
+        """Return string representation of invoice."""
+        return f"<{self.amount} | {self.currency} | {self.date} | {self.status}>"
 
 
 class DataSchema(BaseModel):
     """Schema for data."""
 
     invoices: list[Invoice]
-    payments: list[Payment]
 
 
 class Database:
@@ -118,7 +112,7 @@ class Database:
     ) -> None:
         """Initialize database."""
         self.settings = settings
-        self.data = DataSchema(invoices=[], payments=[])
+        self.data = DataSchema(invoices=[])
         self.nbp_api_client = nbp_api_client
         self.output_file = output_file
 
@@ -137,7 +131,7 @@ class Database:
                 logger.debug("Load data from json file")
                 self.data = DataSchema(**json.load(f))
         except FileNotFoundError:
-            self.data = DataSchema(invoices=[], payments=[])
+            self.data = DataSchema(invoices=[])
             self.save()
         except (json.decoder.JSONDecodeError, TypeError, ValidationError) as e:
             logger.error(e)
@@ -163,19 +157,21 @@ class Database:
         self.data.invoices.append(invoice)
         return invoice
 
-    def add_payment(self, payment: Payment) -> Payment:
+    def add_payment(self, invoice: Invoice, payment: Payment) -> Payment:
         """
         Add payment to database.
 
         Args:
         ----
+            invoice: Invoice
             payment: Payment
 
         Returns:
         -------
             Payment
         """
-        self.data.payments.append(payment)
+        invoice_index = self.data.invoices.index(invoice)
+        self.data.invoices[invoice_index].payments.append(payment)
         return payment
 
     def get_invoice(self, invoice_index: int) -> Invoice:
@@ -205,22 +201,25 @@ class Database:
         """
         return self.data.invoices
 
-    def get_payment(self, payment_id: str) -> Payment:
+    def get_payment(self, invoice: Invoice, payment_index: int) -> Payment:
         """
         Get payment from database.
 
         Args:
         ----
-            payment_id: str
+            invoice: Invoice
+            payment_index: int
 
         Returns:
         -------
             Payment
         """
-        for payment in self.data.payments:
-            if payment.id == payment_id:
-                return payment
-        return None
+        try:
+            return self.data.invoices[self.data.invoices.index(invoice)].payments[
+                payment_index
+            ]
+        except IndexError:
+            return None
 
     def get_payment_by_index(self, payment_index: int) -> Payment:
         """
@@ -239,25 +238,23 @@ class Database:
         except IndexError:
             return None
 
-    def get_payments(self, invoice_id: str | None = None) -> list[Payment]:
+    def get_payments(self, invoice: Invoice) -> list[Payment]:
         """
         Get payments from database.
 
         Args:
         ----
-            invoice_id: str
+            invoice: Invoice
 
         Returns:
         -------
             list[Payment]
         """
-        if invoice_id:
-            return [
-                payment
-                for payment in self.data.payments
-                if payment.invoice_id == invoice_id
-            ]
-        return self.data.payments
+        try:
+            return self.data.invoices[self.data.invoices.index(invoice)].payments
+        except (ValueError, IndexError) as e:
+            logger.error(f"Invoice not found. {e}")
+            return None
 
     def calulate_payments_for_invoice(
         self, invoice: Invoice
@@ -284,7 +281,7 @@ class Database:
                     )
                 )
                 invoice_amount = invoice.amount * invoice_exchange_rate.rates[0].mid
-            payments = self.get_payments(invoice.id)
+            payments = self.get_payments(invoice)
             if not payments:
                 self.data.invoices[invoice_index].status = InvoiceStatus.UNPAID
                 return 0, invoice_amount, self.data.invoices[invoice_index].status
@@ -338,73 +335,72 @@ class Database:
         """
         try:
             invoice_index = self.data.invoices.index(invoice)
-            payment_index = self.data.payments.index(payment)
-            # if invoice and payment have the same currency then exchange rate difference is 0
-            if invoice.currency == payment.currency:
-                self.data.payments[payment_index].exchange_rate_difference = 0
-                return None, None, 0
+            payment_index = self.data.invoices[invoice_index].payments.index(payment)
+
+            exchange_rate_difference = 0
             invoice_exchange_rate = None
-
-            if invoice.currency == "PLN":
-                invoice_exchange_rate = ExchangeRateSchemaResponse(
-                    table="a",
-                    currency="Polski Złoty",
-                    code="PLN",
-                    rates=[
-                        RateSchema(
-                            no="JD",
-                            effectiveDate=datetime.date.today(),  # noqa: DTZ011
-                            mid=1,
-                        )
-                    ],
-                )
-            else:
-                invoice_exchange_rate = (
-                    invoice.exchange_rate
-                    if invoice.exchange_rate
-                    else self.nbp_api_client.get_exchange_rate(
-                        ExchangeRateSchema(
-                            code=invoice.currency,
-                            date=invoice.date,
-                        )
-                    )
-                )
             payment_exchange_rate = None
-            if payment.currency == "PLN":
-                payment_exchange_rate = ExchangeRateSchemaResponse(
-                    table="a",
-                    currency="Polski Złoty",
-                    code="PLN",
-                    rates=[
-                        RateSchema(
-                            no="JD",
-                            effectiveDate=datetime.date.today(),  # noqa: DTZ011
-                            mid=1,
-                        )
-                    ],
+
+            if invoice.currency == payment.currency:
+                # Jeśli waluta faktury i płatności są takie same, różnica to po prostu różnica między kwotami
+                return exchange_rate_difference
+                # Jeśli waluty są różne, musimy przeliczyć jedną z kwot na walutę drugiej kwoty
+            if invoice.currency == "PLN":
+                invoice_exchange_rate = self.nbp_api_client.get_exchange_rate(
+                    ExchangeRateSchema(
+                        table="A", code=payment.currency, date=invoice.date
+                    )
                 )
+                payment_exchange_rate = self.nbp_api_client.get_exchange_rate(
+                    ExchangeRateSchema(
+                        table="A", code=payment.currency, date=payment.date
+                    )
+                )
+                # Przeliczenie wartości faktury na walutę płatności
+                invoice_amount = invoice.amount / invoice_exchange_rate.rates[0].mid
+                logger.debug(f"Invoice amount in payment currency: {invoice_amount}")
+                # Przeliczenie otrzymanych należności na walutę płatności
+                payment_amount = invoice.amount / payment_exchange_rate.rates[0].mid
+                logger.debug(f"Payment amount in payment currency: {payment_amount}")
+                # Obliczenie różnicy między kwotami
+                exchange_rate_difference = payment_amount - invoice_amount
+                logger.debug(f"Exchange rate difference: {exchange_rate_difference}")
+
             else:
-                payment_exchange_rate = (
-                    payment.exchange_rate
-                    if payment.exchange_rate
-                    else self.nbp_api_client.get_exchange_rate(
-                        ExchangeRateSchema(
-                            code=payment.currency,
-                            date=payment.date,
-                        )
+                # Jeśli waluta płatności to PLN, przelicz kwotę faktury na PLN
+                invoice_exchange_rate = self.nbp_api_client.get_exchange_rate(
+                    ExchangeRateSchema(
+                        table="A", code=invoice.currency, date=invoice.date
+                    )
+                )
+                payment_exchange_rate = self.nbp_api_client.get_exchange_rate(
+                    ExchangeRateSchema(
+                        table="A", code=invoice.currency, date=payment.date
                     )
                 )
 
-            echange_rate_difference = (
-                payment_exchange_rate.rates[0].mid - invoice_exchange_rate.rates[0].mid
-            )
-            self.data.payments[
+                # Przeliczenie wartości faktury na PLN
+                invoice_amount = invoice.amount * invoice_exchange_rate.rates[0].mid
+                logger.debug(f"Invoice amount in PLN: {invoice_amount}")
+                # Przeliczenie otrzymanych należności na PLN
+                payment_amount = payment.amount * payment_exchange_rate.rates[0].mid
+                logger.debug(f"Payment amount in PLN: {payment_amount}")
+                # Obliczenie różnicy między kwotami
+                exchange_rate_difference = payment_amount - invoice_amount
+
+            rounded_exchange_rate_difference = round(exchange_rate_difference, 2)
+            self.data.invoices[invoice_index].payments[
                 payment_index
-            ].exchange_rate_difference = echange_rate_difference
-            self.data.payments[payment_index].exchange_rate = payment_exchange_rate
+            ].exchange_rate_difference = rounded_exchange_rate_difference
+
+            self.data.invoices[invoice_index].payments[
+                payment_index
+            ].exchange_rate = payment_exchange_rate
             self.data.invoices[invoice_index].exchange_rate = invoice_exchange_rate
         except ValueError as e:
             logger.error(f"Payment not found. {e}")
-            return None, None, None
+            return exchange_rate_difference
+        except NBPApiError as e:
+            raise NBPApiError(e) from e
         else:
-            return invoice_exchange_rate, payment_exchange_rate, echange_rate_difference
+            return rounded_exchange_rate_difference

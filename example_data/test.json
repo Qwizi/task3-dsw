@@ -1,41 +1,20 @@
 {
     "invoices": [
         {
-            "id": "a100a632-04d0-44bc-b77b-b07ab82de1ad",
-            "amount": 10.0,
-            "currency": "EUR",
-            "date": "2020-01-02",
-            "status": "Nie zaplacona",
-            "exchange_rate": null
-        },
-        {
-            "id": "705bc464-5da3-4757-9378-36ba96a4fcc1",
-            "amount": 1131.0,
+            "amount": 100.0,
             "currency": "PLN",
-            "date": "2020-01-02",
-            "status": "Nie zaplacona",
-            "exchange_rate": null
-        }
-        
-    ],
-    "payments": [
-        {
-            "id": "d15eb5c9-4175-4b3e-8697-182439547837",
-            "invoice_id": "a100a632-04d0-44bc-b77b-b07ab82de1ad",
-            "amount": 10.0,
-            "currency": "USD",
-            "date": "2020-01-02",
+            "date": "2024-01-11",
+            "status": "Zaplacona",
             "exchange_rate": null,
-            "exchange_rate_difference": 0.0
-        },
-        {
-            "id": "66189c63-7fef-4095-a850-4e776fbccde3",
-            "invoice_id": "705bc464-5da3-4757-9378-36ba96a4fcc1",
-            "amount": 19945746.0,
-            "currency": "PLN",
-            "date": "2020-01-02",
-            "exchange_rate": null,
-            "exchange_rate_difference": 0.0
+            "payments": [
+                {
+                    "amount": 100.0,
+                    "currency": "EUR",
+                    "date": "2024-01-10",
+                    "exchange_rate": null,
+                    "exchange_rate_difference": 0.0
+                }
+            ]
         }
     ]
 }
